@@ -1,0 +1,4 @@
+input_path,delimiter
+input/mutational_matrices/in_data_a.csv,csv
+input/mutational_matrices/in_data_b.csv,csv
+input/mutational_matrices/in_data_c.csv,csv
