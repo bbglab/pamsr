@@ -14,15 +14,22 @@ params.samplesheet       = "${projectDir}/input/samplesheet/samplesheet_signatur
 params.samplesheet_delim = "csv"
 
 params.outdir            = "${projectDir}/output"
+// parameters for sigprofiler
+params.reference_signatures = "${projectDir}/input/msigact/Assignment_Solution_Signatures.txt"
+params.genome_assembly      = "GRCh38"
+params.sigprofiler_args     = ""
+params.cpus                 = 12
+params.context_type         = "96"
 
-
+params.project_name         = "testing_spa"
 /*
 ========================================================================================
-    IMPORT MODULES
+    IMPORT SUB-WORKFLOWS & MODULES
 ========================================================================================
 */
-include { INPUT_PREPARATION } from './modules/signature_extraction/input_preparation.nf'
-
+include { VALIDATE_INPUTS; BUILD_SAMPLE_REGISTRY } from './modules/input/input_validation.nf'
+include { GET_SAMPLE_COL; MERGE_SAMPLES } from './modules/input/merge_samples.nf'
+include { SIGPROFILERASSIGNMENT_COSMIC_FIT } from './modules/signature_extraction/spa_cosmic_fit.nf'
 
 /*
 ========================================================================================
@@ -31,15 +38,53 @@ include { INPUT_PREPARATION } from './modules/signature_extraction/input_prepara
 */
 workflow {
 
-    // 1. Create channels for metadata and samplesheet files with existence validation
-    ch_metadata    = Channel.fromPath(params.metadata, checkIfExists: true)
-    ch_samplesheet = Channel.fromPath(params.samplesheet, checkIfExists: true)
-
-    // 2. Call the module process
-    INPUT_PREPARATION(
-        ch_metadata,
-        ch_samplesheet,
+    // Validate inputs and generate channels
+    VALIDATE_INPUTS (
+        params.metadata,
         params.metadata_delim,
+        params.samplesheet,
         params.samplesheet_delim
+    )
+
+    // Access the emitted channels
+    ch_metadata    = VALIDATE_INPUTS.out.metadata
+    ch_samplesheet = VALIDATE_INPUTS.out.samplesheet
+
+    BUILD_SAMPLE_REGISTRY (
+        ch_metadata,
+        ch_samplesheet
+    )
+    ch_registry = BUILD_SAMPLE_REGISTRY.out.registry
+
+    GET_SAMPLE_COL (
+        ch_registry
+    )
+
+    // Collect all generated file paths into a single channel emission
+    ch_all_matrices = GET_SAMPLE_COL.out.sample_matrix
+        .map { meta, matrix_file -> matrix_file }
+        .collect()
+    
+    // Merge into a single CSV DataFrame
+    MERGE_SAMPLES (
+        ch_all_matrices
+    )
+
+    ch_spa_input = MERGE_SAMPLES.out.merged_matrix
+    .map { matrix ->
+        tuple(
+            params.project_name,
+            matrix
+        )
+    }
+
+    ch_reference_signatures = Channel.fromPath(
+        params.reference_signatures,
+        checkIfExists: true
+    )
+
+    SIGPROFILERASSIGNMENT_COSMIC_FIT(
+        ch_spa_input,
+        ch_reference_signatures
     )
 }

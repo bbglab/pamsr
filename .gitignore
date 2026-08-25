@@ -1,2 +1,7 @@
 work
 .nextflow*
+output
+__pycache__/
+*.py[cod]
+# *prueba*
+*.png
