@@ -22,6 +22,7 @@ params.cpus                 = 12
 params.context_type         = "96"
 
 params.project_name         = "testing_spa"
+params.synthetic_N = 100
 /*
 ========================================================================================
     IMPORT SUB-WORKFLOWS & MODULES
@@ -29,8 +30,12 @@ params.project_name         = "testing_spa"
 */
 include { VALIDATE_INPUTS; BUILD_SAMPLE_REGISTRY } from './modules/input_management/input_validation.nf'
 include { GET_SAMPLE_COL; MERGE_SAMPLES } from './modules/input_management/merge_samples.nf'
-include { SIGPROFILERASSIGNMENT_COSMIC_FIT } from './modules/signature_extraction/spa_cosmic_fit.nf'
-
+include {
+    COMPUTE_PARAMS_PER_CHANNEL
+} from './modules/generate_synth_data/compute_parameters.nf'
+include {
+    GENERATE_SYNTHETIC_COUNTS
+} from './modules/generate_synth_data/generate_synthetic_counts.nf'
 /*
 ========================================================================================
     WORKFLOW EXECUTION
@@ -70,21 +75,16 @@ workflow {
         ch_all_matrices
     )
 
-    ch_spa_input = MERGE_SAMPLES.out.merged_matrix
-    .map { matrix ->
-        tuple(
-            params.project_name,
-            matrix
-        )
-    }
+    ch_mutational_matrix=MERGE_SAMPLES.out.merged_matrix
 
-    ch_reference_signatures = Channel.fromPath(
-        params.reference_signatures,
-        checkIfExists: true
+    COMPUTE_PARAMS_PER_CHANNEL(
+        MERGE_SAMPLES.out.merged_matrix
     )
 
-    SIGPROFILERASSIGNMENT_COSMIC_FIT(
-        ch_spa_input,
-        ch_reference_signatures
+    ch_channel_parameters=COMPUTE_PARAMS_PER_CHANNEL.out.channel_params
+
+    GENERATE_SYNTHETIC_COUNTS(
+        ch_channel_parameters
     )
+    GENERATE_SYNTHETIC_COUNTS.out.synthetic_matrix.view()
 }
