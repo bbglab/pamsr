@@ -23,19 +23,33 @@ params.context_type         = "96"
 
 params.project_name         = "testing_spa"
 params.synthetic_N = 100
+// injection
+params.n_duplicates = 5
+
+params.injection_mutations = [
+    10,
+    100,
+    200,
+    300,
+    400,
+    500,
+    700
+]
+params.target_signature      = "SBS1"
+params.injection_seed = 1000
+params.probability_matrix = "${projectDir}/input/msigact/Decomposed_MutationType_Probabilities.txt"
 /*
 ========================================================================================
     IMPORT SUB-WORKFLOWS & MODULES
 ========================================================================================
 */
+
 include { VALIDATE_INPUTS; BUILD_SAMPLE_REGISTRY } from './modules/input_management/input_validation.nf'
 include { GET_SAMPLE_COL; MERGE_SAMPLES } from './modules/input_management/merge_samples.nf'
-include {
-    COMPUTE_PARAMS_PER_CHANNEL
-} from './modules/generate_synth_data/compute_parameters.nf'
-include {
-    GENERATE_SYNTHETIC_COUNTS
-} from './modules/generate_synth_data/generate_synthetic_counts.nf'
+include { COMPUTE_PARAMS_PER_CHANNEL } from './modules/generate_synth_data/compute_parameters.nf'
+include { GENERATE_SYNTHETIC_COUNTS } from './modules/generate_synth_data/generate_synthetic_counts.nf'
+include { INJECT_SIGNATURES } from './modules/power_analysis/signature_injection.nf'
+
 /*
 ========================================================================================
     WORKFLOW EXECUTION
@@ -86,5 +100,32 @@ workflow {
     GENERATE_SYNTHETIC_COUNTS(
         ch_channel_parameters
     )
-    GENERATE_SYNTHETIC_COUNTS.out.synthetic_matrix.view()
+
+    ch_synthetic = GENERATE_SYNTHETIC_COUNTS.out.synthetic_matrix
+
+    ch_duplicate_ids = Channel
+        .from(1..params.n_duplicates.toInteger())
+
+    ch_injection_input = ch_synthetic
+        .flatMap { synthetic_matrix ->
+            (1..params.n_duplicates.toInteger()).collect { duplicate_id ->
+                tuple(
+                    duplicate_id,
+                    synthetic_matrix
+                )
+            }
+        }
+            
+    ch_reference_signatures = Channel.value(
+        file(params.reference_signatures)
+    )
+
+    INJECT_SIGNATURES(
+        ch_injection_input,
+        ch_reference_signatures,
+        params.injection_mutations,
+        params.target_signature,
+        params.injection_seed
+    )
+
 }
