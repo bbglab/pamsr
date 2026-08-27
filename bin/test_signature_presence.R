@@ -8,6 +8,7 @@ spectra_file <- args[1]
 catalog_file <- args[2]
 target_sig   <- args[3]
 cpus         <- as.integer(args[4])
+output_name  <- args[5]
 
 df_equi <- read.csv(
     spectra_file,
@@ -87,6 +88,6 @@ sig.presence.test.out <- SignaturePresenceTest(
 save(
     sig.presence.test.out,
     file = file.path(
-        "sig.presence.test.out.RData"
+        output_name
     )
 )

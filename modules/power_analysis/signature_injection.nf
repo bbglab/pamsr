@@ -1,6 +1,6 @@
 process INJECT_SIGNATURES {
 
-    tag "duplicate_${duplicate_id}_${params.target_signature}"
+    tag "duplicate_${duplicate_id}_${params.target_signature_injection}"
 
     container "docker.io/gomdomingoa/gsd:v0.1.0"
 
@@ -10,7 +10,7 @@ process INJECT_SIGNATURES {
     tuple val(duplicate_id), path(synthetic_matrix)
     path(reference_signatures)
     val(mutation_steps)
-    val(target_signature)
+    val(target_signature_injection)
     val(seed)
 
     output:
@@ -28,7 +28,7 @@ process INJECT_SIGNATURES {
     # ============================================================
 
     duplicate_id = ${duplicate_id}
-    target_signature = "${target_signature}"
+    target_signature = "${target_signature_injection}"
     mutation_steps = ${mutation_steps}
     seed = ${seed}
 

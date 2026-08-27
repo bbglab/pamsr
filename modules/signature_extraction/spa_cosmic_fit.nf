@@ -1,20 +1,21 @@
 process SIGPROFILERASSIGNMENT_COSMIC_FIT {
 
-    tag "${proj_name}"
+    tag params.project_name
 
     cpus params.cpus
 
-    container "docker.io/ferriolcalvet/sigprofiler_assignment:1.1.3"
+    container 'docker.io/ferriolcalvet/sigprofiler_assignment:1.1.3'
+    
+    publishDir "${params.outdir}", mode: 'copy'
 
     input:
-    tuple val(proj_name), path(matrix)
+    path(matrix)
     path(reference_signatures)
 
     output:
-    tuple val(proj_name), path("output_${proj_name}/**/Assignment_Solution_Activities.txt"), emit: sinatures_activities
+    path "sig_profiler_assaignment", emit: spa_output
 
     script:
-    def assembly = task.ext.genome_assembly ?: params.genome_assembly
 
     """
     mkdir -p spa_volume
@@ -26,9 +27,9 @@ process SIGPROFILERASSIGNMENT_COSMIC_FIT {
 
     SigProfilerAssignment cosmic_fit \\
         ${matrix} \\
-        output_${proj_name} \\
+        sig_profiler_assaignment \\
         --signature_database ${reference_signatures} \\
-        --genome_build ${assembly} \\
+        --genome_build ${params.genome_assembly} \\
         --cpu ${task.cpus} \\
         --context_type 96 \\
         --volume spa_volume \\

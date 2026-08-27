@@ -20,7 +20,7 @@ workflow VALIDATE_INPUTS {
 
     main:
     // Parse & validate metadata
-    ch_metadata = Channel
+    ch_metadata = channel
         .fromPath(metadata_path, checkIfExists: true)
         .splitCsv(header: true, sep: getSep(metadata_delim))
         .map { row ->
@@ -37,7 +37,7 @@ workflow VALIDATE_INPUTS {
         }
 
     // Parse & validate samplesheet
-    ch_samplesheet = Channel
+    ch_samplesheet = channel
         .fromPath(samplesheet_path, checkIfExists: true)
         .splitCsv(header: true, sep: getSep(samplesheet_delim))
         .map { row ->
