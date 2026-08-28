@@ -14,7 +14,8 @@ process INJECT_SIGNATURES {
     val(seed)
 
     output:
-    path "injected_duplicate_${duplicate_id}_step_*.tsv", emit: injected_matrices
+    tuple val(duplicate_id), val(mutation_steps), path("injected_duplicate_${duplicate_id}_step_*.tsv"),
+        emit: injected_matrices
 
     script:
     """
@@ -23,18 +24,10 @@ process INJECT_SIGNATURES {
     import numpy as np
     import pandas as pd
 
-    # ============================================================
-    # Parameters
-    # ============================================================
-
     duplicate_id = ${duplicate_id}
     target_signature = "${target_signature_injection}"
     mutation_steps = ${mutation_steps}
     seed = ${seed}
-
-    # ============================================================
-    # Input files
-    # ============================================================
 
     df_output = pd.read_csv(
         "${synthetic_matrix}",
@@ -45,10 +38,6 @@ process INJECT_SIGNATURES {
         "${reference_signatures}",
         sep="\\t"
     )
-
-    # ============================================================
-    # Mutation labels
-    # ============================================================
 
     mutation_col = df_output.columns[0]
 
@@ -61,16 +50,11 @@ process INJECT_SIGNATURES {
             "synthetic matrix and signature matrix."
         )
 
-    # Align signature to synthetic matrix
     df_signatures = (
         df_signatures
         .set_index(df_signatures.columns[0])
         .reindex(input_labels)
     )
-
-    # ============================================================
-    # Target signature
-    # ============================================================
 
     if target_signature not in df_signatures.columns:
         raise ValueError(
@@ -92,17 +76,7 @@ process INJECT_SIGNATURES {
 
     p = p / p.sum()
 
-    # ============================================================
-    # Random number generator
-    # ============================================================
-
-    rng = np.random.default_rng(
-        seed + duplicate_id
-    )
-
-    # ============================================================
-    # Samples that can receive mutations
-    # ============================================================
+    rng = np.random.default_rng(seed + duplicate_id)
 
     sample_columns = list(df_output.columns[1:])
 
@@ -111,38 +85,20 @@ process INJECT_SIGNATURES {
             "Synthetic matrix contains no sample columns."
         )
 
-    # ============================================================
-    # Sequential injection
-    # ============================================================
-
-    for step, n_mutations in enumerate(
-        mutation_steps,
-        start=1
-    ):
+    for step, n_mutations in enumerate(mutation_steps, start=1):
 
         n_mutations = int(n_mutations)
 
-        # --------------------------------------------------------
-        # Each individual mutation is assigned to a random sample
-        # --------------------------------------------------------
-
         for i in range(n_mutations):
 
-            selected_sample = rng.choice(
-                sample_columns
-            )
+            selected_sample = rng.choice(sample_columns)
 
-            # One mutation drawn from the target signature
             counts = rng.multinomial(
                 n=1,
                 pvals=p
             )
 
             df_output.loc[:, selected_sample] += counts
-
-        # --------------------------------------------------------
-        # Save the state AFTER this injection step
-        # --------------------------------------------------------
 
         output_file = (
             f"injected_duplicate_{duplicate_id}"

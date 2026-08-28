@@ -10,72 +10,41 @@ target_sig   <- args[3]
 cpus         <- as.integer(args[4])
 output_name  <- args[5]
 
-df_equi <- read.csv(
+df_spectra <- read.table(
     spectra_file,
-    row.names = 1
-)
-
-df_p <- read.table(
-    catalog_file,
+    sep = "\t",
+    header = TRUE,
     row.names = 1,
-    header = TRUE
-    )
-
-rownames(df_equi) <- gsub(
-    "[^A-Za-z]",
-    "",
-    rownames(df_equi)
+    check.names = FALSE
 )
 
-rownames(df_p) <- gsub(
-    "[^A-Za-z]",
-    "",
-    rownames(df_p)
+df_catalog <- read.table(
+    catalog_file,
+    sep = "\t",
+    header = TRUE,
+    row.names = 1,
+    check.names = FALSE
 )
+rownames(df_spectra) <- gsub("[^A-Za-z]", "", rownames(df_spectra))
 
-common_rows <- intersect(
-    rownames(df_equi),
-    rownames(df_p)
-)
+rownames(df_catalog) <- gsub("[^A-Za-z]", "", rownames(df_catalog))
+
+common_rows <- intersect(rownames(df_spectra),rownames(df_catalog))
 
 if (length(common_rows) != 96) {
     stop(
-        "Row names do not match between df_equi and df_p."
+        "Row names do not match between df_spectra and df_catalog."
     )
 }
 
-df_equi <- df_equi[
-    common_rows,
-    ,
-    drop = FALSE
-]
-
-df_p <- df_p[
-    common_rows,
-    ,
-    drop = FALSE
-]
-
-spectra_mat <- as.matrix(df_equi)
-
+spectra_mat <- as.matrix(df_spectra)
 mode(spectra_mat) <- "numeric"
 
-sigs_mat <- as.matrix(df_p)
-
+sigs_mat <- as.matrix(df_catalog)
 mode(sigs_mat) <- "numeric"
 
-if (!target_sig %in% colnames(sigs_mat)) {
-    stop(
-        paste(
-            "Target signature",
-            target_sig,
-            "is not present in signature columns:",
-            paste(
-                colnames(sigs_mat),
-                collapse = ", "
-            )
-        )
-    )
+if (nrow(spectra_mat) != nrow(sigs_mat)) {
+    stop(paste("Mismatch: spectra has", nrow(spectra_mat), "rows, but sigs has", nrow(sigs_mat), "rows."))
 }
 
 sig.presence.test.out <- SignaturePresenceTest(

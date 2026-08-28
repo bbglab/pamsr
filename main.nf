@@ -62,6 +62,11 @@ workflow {
         PA(
            ch_mutational_matrix 
         )
+        // PA.out.pepe.view()
+        // PA.out.a.view()
+        // PA.out.b.view()
+        // PA.out.c.view()
+
     }
     else {
         error """
