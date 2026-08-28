@@ -1,4 +1,8 @@
 process PLOT_RECONSTRUCTION_RESIDUALS {
+    container "docker.io/gomdomingoa/gsd:v0.1.0"
+
+    publishDir "${params.outdir}/signature_detection/plots", mode: 'copy'
+
     input:
     path stats_csv
 

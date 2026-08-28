@@ -1,4 +1,8 @@
-process COMPARE_EXPOSURES {
+process PLOT_COMPARE_EXPOSURES {
+    container "docker.io/gomdomingoa/gsd:v0.1.0"
+
+    publishDir "${params.outdir}/signature_detection/plots", mode: 'copy'
+
     input:
     path file_with_csv
     path file_without_csv
@@ -9,7 +13,7 @@ process COMPARE_EXPOSURES {
 
     script:
     """
-    compare_exposures.py \\
+    plot_exposure_comparison.py \\
         --file_with ${file_with_csv} \\
         --file_without ${file_without_csv} \\
         --target_sig ${target_signature} \\

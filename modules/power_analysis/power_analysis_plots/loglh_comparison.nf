@@ -1,4 +1,8 @@
 process PLOT_LOGLH {
+    container "docker.io/gomdomingoa/gsd:v0.1.0"
+
+    publishDir "${params.outdir}/signature_detection/plots", mode: 'copy'
+
     input:
     path stats_csv
     val  stat_metric

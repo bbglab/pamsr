@@ -1,4 +1,8 @@
-process SIGNIFICANCE_RATE {
+process PLOT_SIGNIFICANCE_RATE {
+    container "docker.io/gomdomingoa/gsd:v0.1.0"
+
+    publishDir "${params.outdir}/signature_detection/plots", mode: 'copy'
+
     input:
     path stats_csv
     val  alpha_val

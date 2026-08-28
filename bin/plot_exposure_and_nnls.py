@@ -67,7 +67,7 @@ def plot_exposure_and_nnls(
         raise FileNotFoundError(f"Exposures file not found: {exposures_file}")
 
     # Load data
-    df_cosmic = pd.read_csv(cosmic_file, sep=",")
+    df_cosmic = pd.read_csv(cosmic_file, sep="\t")
     context_col = df_cosmic.columns[0]
     df_cosmic.set_index(context_col, inplace=True)
 
@@ -205,25 +205,3 @@ if __name__ == "__main__":
         bg_sigs=args.bg_sigs,
         output_plot=args.output_plot,
     )
-
-
-#     process RUN_NNLS_EXPOSURE {
-#     input:
-#     path cosmic_csv
-#     path exposures_csv
-#     val  target_signature
-#     val  bg_signatures // e.g. ["SBS1", "SBS5", "SBS40"]
-
-#     output:
-#     path "*.png"
-
-#     script:
-#     """
-#     plot_exposure_nnls.py \\
-#         --cosmic_file ${cosmic_csv} \\
-#         --exposures_file ${exposures_csv} \\
-#         --target_sig ${target_signature} \\
-#         --bg_sigs ${bg_signatures.join(' ')} \\
-#         --output_plot "exposure_${target_signature}.png"
-#     """
-# }

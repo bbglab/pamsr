@@ -1,4 +1,8 @@
 process PLOT_SIGNATURE_BLEED {
+    container "docker.io/gomdomingoa/gsd:v0.1.0"
+
+    publishDir "${params.outdir}/signature_detection/plots", mode: 'copy'
+
     input:
     path file_with_csv
     path file_without_csv

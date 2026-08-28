@@ -11,7 +11,8 @@ nextflow.enable.dsl = 2
 include { GSD } from '../subworkflows/generate_synthetic_datasets.nf'
 include { SIGNATURE_PRESENCE_TEST } from '../modules/power_analysis/signature_detection.nf'
 include { SIGNATURE_PRESENCE_SUMMARY } from '../modules/power_analysis/signature_detection.nf'
-
+include { SIGNATURE_PRESENCE_SUMMARY_MERGE } from '../modules/power_analysis/signature_detection.nf'
+include { PLOT_PA } from '../subworkflows/plots_power_analysis.nf'
 /*
 ========================================================================================
     WORKFLOW EXECUTION
@@ -60,10 +61,35 @@ workflow PA {
     SIGNATURE_PRESENCE_SUMMARY(
         ch_signature_detections
     )
-    
-    emit:
-    a = SIGNATURE_PRESENCE_SUMMARY.out.summary
-    b = SIGNATURE_PRESENCE_SUMMARY.out.exposures_with
-    c = SIGNATURE_PRESENCE_SUMMARY.out.exposures_with
+
+    ch_summary_individual = SIGNATURE_PRESENCE_SUMMARY.out.summary
+        .map { duplicate_id, iteration, n_mutations, file -> file }
+        .collect()
+
+    ch_exposures_with_individual = SIGNATURE_PRESENCE_SUMMARY.out.exposures_with
+        .map { duplicate_id, iteration, n_mutations, file -> file }
+        .collect()
+
+    ch_exposures_without_individual = SIGNATURE_PRESENCE_SUMMARY.out.exposures_without
+        .map { duplicate_id, iteration, n_mutations, file -> file }
+        .collect()
+
+    SIGNATURE_PRESENCE_SUMMARY_MERGE(
+    ch_summary_individual,
+    ch_exposures_with_individual,
+    ch_exposures_without_individual
+    )
+
+    ch_summary_merged = SIGNATURE_PRESENCE_SUMMARY_MERGE.out.summary
+
+    ch_exposures_with_merged = SIGNATURE_PRESENCE_SUMMARY_MERGE.out.exposures_with
+
+    ch_exposures_without_merged = SIGNATURE_PRESENCE_SUMMARY_MERGE.out.exposures_without
+
+    PLOT_PA(
+        ch_summary_merged,
+        ch_exposures_with_merged,
+        ch_exposures_without_merged
+    )
 
 }
