@@ -53,7 +53,7 @@ workflow {
     // ===========================
     // Signature Profiler Analysis
     // ===========================
-    if (params.analysis_mode == 'spa') {
+    if (params.analysis_mode == 'signature_profiler_assignment') {
 
         SPA(
             ch_mutational_matrix
@@ -63,7 +63,7 @@ workflow {
     // ===========================
     // Power analysis
     // ===========================
-    else if (params.analysis_mode == 'pa') {
+    else if (params.analysis_mode == 'power_analysis') {
 
         PA(
            ch_mutational_matrix 

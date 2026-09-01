@@ -35,6 +35,7 @@ process GET_SAMPLE_COL {
 }
 
 process MERGE_SAMPLES {
+    tag "${params.project_name}"
     // Load the container
     container "docker.io/gomdomingoa/gsd:v0.1.0"
 
@@ -76,6 +77,16 @@ process MERGE_SAMPLES {
 
     # Reset index to restore 'Mutation Types' as the first column
     merged_df.reset_index(inplace=True)
+
+    sample_cols = [c for c in merged_df.columns if c != label_col]
+
+    merged_df[sample_cols] = (
+    merged_df[sample_cols]
+    .apply(pd.to_numeric, errors="raise")
+    .round()
+    .astype("int64")
+    )
+
     merged_df.to_csv(
         "merged_mutation_matrix.tsv",
         sep="\\t",
