@@ -1,0 +1,17 @@
+colon:
+/data/bbg/datasets/transfer/ferriol_deepcsa/signature_matrices/samples_matrix.colon.all.sp.tsv
+120 samples
+
+kidney with artifacts:
+/data/bbg/datasets/transfer/ferriol_deepcsa/signature_matrices/samples_matrix.kidney.all.sp.tsv98 samples
+
+autopsies:
+/data/bbg/datasets/transfer/ferriol_deepcsa/signature_matrices/samples_matrix.autopsy.all.sp.tsv
+40 samples
+
+blood:
+/data/bbg/datasets/transfer/ferriol_deepcsa/signature_matrices/samples_matrix.blood.all.sp.tsv
+43 samples
+
+all_with_accesses:
+/data/bbg/datasets/transfer/ferriol_deepcsa/signature_matrices

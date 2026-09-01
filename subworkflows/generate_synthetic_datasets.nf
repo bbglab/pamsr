@@ -1,34 +1,36 @@
-#!/usr/bin/env nextflow
-
 nextflow.enable.dsl = 2
-
 /*
-========================================================================================
-    IMPORT SUB-WORKFLOWS & MODULES
-========================================================================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    IMPORTS: NEXTFLOW MODULES
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
 include { COMPUTE_PARAMS_PER_CHANNEL } from '../modules/generate_synth_data/compute_parameters.nf'
 include { GENERATE_SYNTHETIC_COUNTS } from '../modules/generate_synth_data/generate_synthetic_counts.nf'
 include { INJECT_SIGNATURES } from '../modules/power_analysis/signature_injection.nf'
-
 /*
-========================================================================================
-    WORKFLOW EXECUTION
-========================================================================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ WORKFLOW: Run pipeline for the generation of synthetic datasets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 workflow GSD {
-
+    // Take the input:
+    // -matrix: mutational matrix (96 channels x n samples)
     take:
     matrix
 
     main:
+    // =============================================
+    // Compute the parameters needed for the
+    // generation of synthetic samples
+    // =============================================
     COMPUTE_PARAMS_PER_CHANNEL(
         matrix
     )
 
     ch_channel_parameters=COMPUTE_PARAMS_PER_CHANNEL.out.channel_params
-
+    // =============================================
+    // Generate the synthetic counts
+    // =============================================
     GENERATE_SYNTHETIC_COUNTS(
         ch_channel_parameters
     )
@@ -48,7 +50,11 @@ workflow GSD {
     ch_reference_signatures = channel.value(
         file(params.reference_signatures_gsd)
     )
-
+    // =============================================
+    // Generate new samples injecting the mutational
+    // signatures at different levels of activities,
+    // in an iterative manner
+    // =============================================
     INJECT_SIGNATURES(
         ch_injection_input,
         ch_reference_signatures,

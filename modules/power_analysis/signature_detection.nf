@@ -1,15 +1,23 @@
 process SIGNATURE_PRESENCE_TEST {
 
+    // Specify the process tag
     tag "duplicate_${duplicate_id}_step_${iteration}_n_${n_mutations}"
 
+    // Load the container
     container "docker.io/gomdomingoa/msigact:v0.1.0"
 
-    publishDir "${params.outdir}/signature_detection/rdata", mode: 'copy'
+    // Publish the results
+    publishDir "${params.outdir}/${params.project_name}/signature_detection/rdata", mode: 'copy'
 
+    // Take the input:
+    // - duplicate_id (str) / iteration (int) / n_mutations (int) / matrix (.tsv): replicate id, injection step, number of injected
+    //   mutations at that step, and the corresponding (possibly injected) mutational matrix to test
+    // - catalog (.tsv): path to the reference signature catalog used by the presence test
     input:
     tuple val(duplicate_id), val(iteration), val(n_mutations), path(matrix)
     path catalog
 
+    // Specify the output of the process and emit it
     output:
     tuple val(duplicate_id), val(iteration), val(n_mutations),
           path("${matrix.simpleName}.sig.presence.test.RData"),
@@ -31,13 +39,22 @@ process SIGNATURE_PRESENCE_TEST {
 
 process SIGNATURE_PRESENCE_SUMMARY {
 
+    // Specify the process tag
     tag "duplicate_${duplicate_id}_step_${iteration}_n_${n_mutations}"
 
+    // Load the container
     container "docker.io/gomdomingoa/msigact:v0.1.0"
 
+    // Take the input:
+    // - duplicate_id (str) / iteration (int) / n_mutations (int) / rdata (.RData): replicate id, injection step, number of injected
+    //   mutations, and the RData object produced by SIGNATURE_PRESENCE_TEST to be summarized
     input:
     tuple val(duplicate_id), val(iteration), val(n_mutations), path(rdata)
 
+    // Specify the output of the process and emit it:
+    // - summary (.csv): per-run summary statistics
+    // - exposures_with (.csv): signature exposures computed including the target signature in the presence test model
+    // - exposures_without (.csv): signature exposures computed excluding the target signature in the presence test model
     output:
     tuple val(duplicate_id), val(iteration), val(n_mutations),
           path("${rdata}_summary_statistics.csv"),
@@ -76,15 +93,22 @@ process SIGNATURE_PRESENCE_SUMMARY {
 
 process SIGNATURE_PRESENCE_SUMMARY_MERGE {
 
+    // Load the container
     container "docker.io/gomdomingoa/gsd:v0.1.0"
 
-    publishDir "${params.outdir}/signature_detection/summary", mode: 'copy'
+    // Publish the results
+    publishDir "${params.outdir}/${params.project_name}/signature_detection/summary", mode: 'copy'
 
+    // Take the input:
+    // - summary_files (.csv, collection): all per-run "*_summary_statistics.csv" files to merge
+    // - exposures_with_files (.csv, collection): all per-run "*_exposures_with_target.csv" files to merge
+    // - exposures_without_files (.csv, collection): all per-run "*_exposures_without_target.csv" files to merge
     input:
     path summary_files
     path exposures_with_files
     path exposures_without_files
 
+    // Specify the output of the process and emit it
     output:
     path "merged_summary_statistics.csv", emit: summary
     path "merged_exposures_with_target.csv", emit: exposures_with

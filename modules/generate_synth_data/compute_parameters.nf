@@ -1,12 +1,18 @@
 process COMPUTE_PARAMS_PER_CHANNEL {
 
+    // Specify the process tag
     tag "channel_parameters"
 
+    // Load the container
     container "docker.io/gomdomingoa/gsd:v0.1.0"
 
+    // Take the input:
+    // - mutation_matrix (.tsv): path to the merged mutation count matrix (mutation types x samples)
+    //   used to estimate per-channel Gamma-Poisson parameters
     input:
     path mutation_matrix
 
+    // Specify the output of the process and emit it
     output:
     path "channel_parameters.tsv", emit: channel_params
 

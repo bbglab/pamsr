@@ -1,13 +1,20 @@
 process GET_SAMPLE_COL {
+    tag "${meta.sample_id}"
+    // Load the container
     container "docker.io/gomdomingoa/gsd:v0.1.0"
 
+    // Take the input:
+    // - meta (val): a metadata map/object holding, among other fields, matrix_path (path to the source matrix),
+    //   sample_id (the sample/column to extract) and delim (delimiter of the source matrix, "csv" or "tsv")
     input:
     val meta
 
+    // Specify the output of the process and emit it
     output:
     tuple val(meta), path("${meta.sample_id}_mut_mat.tsv"), emit: sample_matrix
 
     script:
+    // Resolve the separator character used to read the source matrix, based on meta.delim
     def sep = (meta.delim.toLowerCase() == 'tsv') ? '\\t' : ','
     """
     #!/usr/bin/env python3
@@ -28,13 +35,18 @@ process GET_SAMPLE_COL {
 }
 
 process MERGE_SAMPLES {
+    // Load the container
     container "docker.io/gomdomingoa/gsd:v0.1.0"
 
-    publishDir "${params.outdir}/merged_matrix", mode: 'copy'
+    // Publish the results
+    publishDir "${params.outdir}/${params.project_name}/merged_matrix", mode: 'copy'
 
+    // Take the input:
+    // - sample_files (.tsv, collection): the per-sample "*_mut_mat.tsv" matrices produced by GET_SAMPLE_COL, to be merged
     input:
     path sample_files
 
+    // Specify the output of the process and emit it
     output:
     path "merged_mutation_matrix.tsv", emit: merged_matrix
 

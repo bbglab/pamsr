@@ -1,22 +1,31 @@
 process RECONSTRUCT_MUTATIONAL_MATRIX {
 
+    // Specify the process tag
     tag "reconstruction"
 
+    // Specify the cpus that can be used by the process
     cpus 1
 
+    // Load the container
     container "docker.io/gomdomingoa/gsd:v0.1.0"
 
+    // Publish the results
     publishDir "${params.outdir}/reconstruction", mode: 'copy'
 
+    // Take the input:
+    // - signatures (.tsv/.csv): path to the signatures matrix (MutationType x Signature) plus its delimiter ("csv"/"tsv")
+    // - activities (.tsv/.csv): path to the activities/exposures matrix (Sample x Signature) plus its delimiter ("csv"/"tsv")
     input:
     tuple path(signatures), val(signatures_delim)
     tuple path(activities), val(activities_delim)
 
+    // Specify the output of the process and emit it
     output:
     path "reconstructed_mutational_matrix.csv", emit: reconstructed_matrix
 
     script:
 
+    // Resolve the separator character to use when reading each input file, based on its declared delimiter
     def signatures_sep = signatures_delim == "csv" ? "," : "\t"
     def activities_sep = activities_delim == "csv" ? "," : "\t"
 

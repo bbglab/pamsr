@@ -1,12 +1,17 @@
 process ALIGN_MUTATION_TYPES {
 
+    // Specify the process tag
     tag "${matrix.simpleName}"
 
+    // Load the container
     container "docker.io/gomdomingoa/gsd:v0.1.0"
 
+    // Take the input:
+    // - matrix (.tsv): path to a mutational count/probability matrix whose first column holds the mutation type labels
     input:
     path matrix
 
+    // Specify the output of the process and emit it
     output:
     path "aligned_${matrix.simpleName}.tsv", emit: aligned_matrix
     

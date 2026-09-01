@@ -1,5 +1,7 @@
 // modules/signature_extraction/input_validation.nf
 
+// Helper function: translates a human-readable delimiter name ("csv"/"tsv") into
+// the actual separator character used by splitCsv/readers, throwing if unsupported
 def getSep(delimiter) {
     def d = delimiter.toLowerCase()
     if (d == 'csv') {
@@ -12,6 +14,11 @@ def getSep(delimiter) {
 }
 
 workflow VALIDATE_INPUTS {
+    // Take the input:
+    // - metadata_path: path to the metadata file (must contain 'sample_id' and 'group' columns)
+    // - metadata_delim: delimiter of the metadata file ("csv"/"tsv")
+    // - samplesheet_path: path to the samplesheet file (must contain 'input_path' and 'delimiter' columns)
+    // - samplesheet_delim: delimiter of the samplesheet file ("csv"/"tsv")
     take:
     metadata_path
     metadata_delim
@@ -50,12 +57,18 @@ workflow VALIDATE_INPUTS {
             return tuple(file(row.input_path, checkIfExists: true), row.delimiter)
         }
 
+    // Specify the output of the workflow and emit it:
+    // - metadata: collected list of validated metadata rows (sample_id, group, raw_row)
+    // - samplesheet: collected list of [file, delimiter] tuples from the samplesheet
     emit:
     metadata    = ch_metadata.collect()
     samplesheet = ch_samplesheet.collect(flat: false)
 }
 
 workflow BUILD_SAMPLE_REGISTRY {
+    // Take the input:
+    // - ch_metadata: validated metadata channel emitted by VALIDATE_INPUTS
+    // - ch_samplesheet: validated samplesheet channel emitted by VALIDATE_INPUTS
     take:
     ch_metadata     // Metadata channel
     ch_samplesheet  // Samplesheet channel
@@ -99,6 +112,8 @@ workflow BUILD_SAMPLE_REGISTRY {
             ]
         }
 
+    // Specify the output of the workflow and emit it:
+    // - registry: channel mapping each sample_id to its source matrix_path and delimiter
     emit:
     registry = ch_registry
 }

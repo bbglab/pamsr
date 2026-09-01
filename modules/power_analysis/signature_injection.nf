@@ -1,18 +1,24 @@
 process INJECT_SIGNATURES {
-
+    // Specify the process tag
     tag "duplicate_${duplicate_id}_${params.target_signature_injection}"
-
+    // Load the container
     container "docker.io/gomdomingoa/gsd:v0.1.0"
-
-    publishDir "${params.outdir}/injected", mode: 'copy'
-
+    // Publish the results
+    publishDir "${params.outdir}/${params.project_name}/injected", mode: 'copy'
+    // Take the input:
+    // - duplicate_id (str): identifier of the synthetic sample
+    // - synthetic_matrix (.tsv): path to the matrix with the synthetic mutational counts of all samples
+    // - reference_signatures (.tsv): path to the file containing the mutational catalog used in the process
+    // - mutation_steps (list): list of the different levels (int) of signature injection
+    // - target_signature_injection (str): signature that is going to be injected in the sample
+    // - seed (str): seed to be able keep the process reproducible
     input:
     tuple val(duplicate_id), path(synthetic_matrix)
     path(reference_signatures)
     val(mutation_steps)
     val(target_signature_injection)
     val(seed)
-
+    // Specify the output of the process and emit it
     output:
     tuple val(duplicate_id), val(mutation_steps), path("injected_duplicate_${duplicate_id}_step_*.tsv"),
         emit: injected_matrices

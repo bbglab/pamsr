@@ -1,12 +1,18 @@
 process GENERATE_SYNTHETIC_COUNTS {
 
+    // Specify the process tag
     tag "synthetic_counts_N${params.synthetic_N}"
 
+    // Load the container
     container "docker.io/gomdomingoa/gsd:v0.1.0"
 
+    // Take the input:
+    // - channel_parameters (.tsv): path to the per-channel Gamma-Poisson parameters (alpha_k, theta_k)
+    //   produced by COMPUTE_PARAMS_PER_CHANNEL, used to simulate synthetic mutation counts
     input:
     path channel_parameters
 
+    // Specify the output of the process and emit it
     output:
     path "synthetic_mutation_matrix.tsv", emit: synthetic_matrix
 
