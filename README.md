@@ -34,8 +34,9 @@ PAMSR requires the following components:
 - Nextflow.
 - Singularity runtime used to execute the PAMSR components.
 - Containers are automatically pulled from Docker Hub:
-  - pamsr-r: R-based statistical analysis component, containing mSigAct.
-  - pamsr-py: Python-based data processing component, containing SigProfilerAssignment.
+  - docker.io/gomdomingoa/msigact:v0.1.0: R-based statistical analysis component, containing mSigAct.
+  - docker.io/gomdomingoa/pamsr-py:v0.1.0: python-based data processing component, containing various libraries for data processing.
+  - docker.io/ferriolcalvet/sigprofiler_assignment:1.1.3: python-based analysis component, containing SigProfilerAssignment.
 
 ## Quick Start
 
