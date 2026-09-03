@@ -2,7 +2,7 @@
 
 ## Overview
 
-**PAMSR** is a pipeline designed to investigate the statistical constraints underlying the detection of trinucleotide mutational signatures. It tests the detectability of a given signature across different levels of its mutational activity.
+**PAMSR** is a pipeline designed to investigate the statistical constraints underlying the detection of trinucleotide mutational signatures. It tests the detectability of a given signature across different levels of mutational activity.
 
 ## Workflow
 
@@ -10,17 +10,18 @@ The pipeline consists of **two sequential stages**:
 
 ### Signature Refitting
 
-The first stage performs mutational signature refitting on an input mutation dataset using [SigProfilerAssignment](https://github.com/SigProfilerSuite/SigProfilerAssignment).
+The first stage performs a mutational signature refitting on an input mutation dataset using [SigProfilerAssignment](https://github.com/SigProfilerSuite/SigProfilerAssignment).
 
 Following the refitting step, a signature of interest can be selected as the target signature for the subsequent power analysis.
 
 ### Synthetic Data Generation and Power Analysis
 
-The second stage generates synthetic mutation-count data based on the characteristics of the input dataset. The selected signature is introduced at controlled levels of injection, allowing to study the behaviour of the signature reconstruction across different signature activites and sample sizes. Signature reconstruction is studying using [mSigAct](https://github.com/steverozen/mSigAct).
+The second stage generates synthetic mutation-count data based on the characteristics of the input dataset. The selected signature is introduced at controlled levels of injection, allowing to study the behaviour of the signature reconstruction across different signature activites and sample sizes. Signature reconstruction is studied using [mSigAct](https://github.com/steverozen/mSigAct).
 
-By systematically varying factors such as the sample size and the signature injection, PAMSR can be used to characterize the statistical power and limitations of mutational signature refitting methods.
+By systematically varying factors such as the sample size and the signature injection, PAMSR characterize the statistical power and limitations of mutational signature refitting methods.
 
-## Installation 
+## Installation
+
 PAMSR is distributed as a Nextflow pipeline through this repository. A conda recipe can be found in the `assets` folder, so one can easily prepare an enviorment with nextflow and run the pipeline:
 
 ```bash
@@ -46,7 +47,7 @@ PAMSR requires the following components:
 
 ### Signature Reffiting
 
-For this stage, the input consists in a `samplesheet` that leads to mutational matrices and a `metadata` file that lists the `sample_id` of the samples that will be used. Both can be inputed as `.csv` or `.tsv` files (which must be specified in the corresponding parameter).
+For this stage, the input consists in a `samplesheet` that leads to mutational matrices and a `metadata` file that lists the `sample_id` and `group` of the samples that will be used. Both can be inputed as `.csv` or `.tsv` files (which must be specified in the corresponding parameter).
 
 The samplesheet must contain, at least, the columns `input_path` and `delimiter`. It should look as follows:
 
@@ -54,21 +55,21 @@ The samplesheet must contain, at least, the columns `input_path` and `delimiter`
 
 ```csv
 input_path,delimiter,...
-/home/.../input/mutational_matrices/a_data.csv,csv,...
-/home/.../input/mutational_matrices/b_data.csv,csv,...
-/home/.../input/mutational_matrices/c_data.tsv,tsv,...
+/home/...../input/mutational_matrices/a_data.csv,csv,...
+/home/...../input/mutational_matrices/b_data.csv,csv,...
+/home/...../input/mutational_matrices/c_data.tsv,tsv,...
 ```
 The samplesheet must contain, at least, the column `sample_id`, whoose values must match the name of the sample that is indicated in the first row of the mutational matrix. It should look as follows:
 
 `metadata.csv`:
 
 ```csv
-sample_id,...
-P105A,...
-P105p,...
-P105f,...
-P105C,...
-P105B,...
+sample_id,group,...
+P105A,lung,...
+P105p,lung,...
+P105f,lung,...
+P105C,lung,...
+P105B,lung,...
 ```
 
 Then, it is recommended to choose a `project_name` (by default will be set to `test`), and the pipeline will be ready to use.
@@ -88,9 +89,9 @@ nextflow run main.nf \
 
 ### Synthetic Data Generation and Power Analysis
 
-For this stage, one should have in mind which mutational signature will be the focus of the study. The input can be specified as before, but for this step is higly recommended to try the `tuned_reconstruction` mode. This allows the user to reconstruct the input data from the mutational matrices derived from the results of the signature reffiting, removing the constribution of a given signature (generally, the one that is under study).
+For this stage, one should have in mind which mutational signature will be the focus of the study. The input can be specified as before, but for this step is higly recommended to try the `tuned_reconstruction` mode. This allows the user to reconstruct the input data from the mutational matrices derived from the results of the signature reffiting, removing the contribution of a given signature (generally, the one that is under study).
 
-These new type of input consists in a `samplesheet` that leads to an `activity` matrix and a `signatures_catalog` used by the signature refitting tool. The `metadata` file consists in a file that lists the `sample_id` of the samples that will be used. Again, both files be inputed as `.csv` or `.tsv` files (which must be specified in the corresponding parameter).
+This new type of input consists in a `samplesheet` that leads to an `activity` matrix and a `signatures_catalog` used by the signature refitting tool. The `metadata` file consists in a file that lists the `sample_id` and `group` of the samples that will be used. Again, both files be inputed as `.csv` or `.tsv` files (which must be specified in the corresponding parameter).
 
 The samplesheet must contain, at least, the columns `input_path` and `delimiter`. It should look as follows:
 
@@ -107,11 +108,11 @@ The samplesheet must contain, at least, the column `sample_id`, whoose values mu
 
 ```csv
 sample_id,...
-P105A,...
-P105p,...
-P105f,...
-P105C,...
-P105B,...
+P105A,lung,...
+P105p,lung,...
+P105f,lung,...
+P105C,lung,...
+P105B,lung,...
 ```
 
 Then, it is recommended to choose a `project_name` (by default will be set to `test`), and the pipeline will be ready to use.
@@ -134,7 +135,7 @@ nextflow run main.nf \
 
 ## Credits
 
-pamser was originally written by Alberto Domingo Gómez and supervised by @koszulordie.
+pamser was originally written by @gomdomingoa and supervised by @koszulordie.
 
 ## Citations
 
