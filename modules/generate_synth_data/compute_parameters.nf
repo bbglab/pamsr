@@ -6,6 +6,10 @@ process COMPUTE_PARAMS_PER_CHANNEL {
     // Load the container
     container "docker.io/gomdomingoa/gsd:v0.1.0"
 
+
+    // Publish the results
+    publishDir "${params.outdir}/${params.project_name}/synthetic_data", mode: 'copy'
+
     // Take the input:
     // - mutation_matrix (.tsv): path to the merged mutation count matrix (mutation types x samples)
     //   used to estimate per-channel Gamma-Poisson parameters
@@ -61,38 +65,38 @@ process COMPUTE_PARAMS_PER_CHANNEL {
     # Check parameter constraints
     # ------------------------------------------------------------
 
-    invalid_alpha = alpha_k <= 0
-    invalid_theta = theta_k <= 0
+    # invalid_alpha = alpha_k <= 0
+    # invalid_theta = theta_k <= 0
 
-    if invalid_alpha.any():
+    # if invalid_alpha.any():
 
-        print("ERROR: The following channels have alpha_k <= 0:")
+    #     print("ERROR: The following channels have alpha_k <= 0:")
 
-        print(
-            pd.DataFrame({
-                "Mutation Types": mutation_types[invalid_alpha],
-                "alpha_k": alpha_k[invalid_alpha]
-            }).to_string(index=False)
-        )
+    #     print(
+    #         pd.DataFrame({
+    #             "Mutation Types": mutation_types[invalid_alpha],
+    #             "alpha_k": alpha_k[invalid_alpha]
+    #         }).to_string(index=False)
+    #     )
 
-        raise ValueError(
-            "All alpha_k parameters must be greater than 0."
-        )
+    #     raise ValueError(
+    #         "All alpha_k parameters must be greater than 0."
+    #     )
 
-    if invalid_theta.any():
+    # if invalid_theta.any():
 
-        print("ERROR: The following channels have theta_k <= 0:")
+    #     print("ERROR: The following channels have theta_k <= 0:")
 
-        print(
-            pd.DataFrame({
-                "Mutation Types": mutation_types[invalid_theta],
-                "theta_k": theta_k[invalid_theta]
-            }).to_string(index=False)
-        )
+    #     print(
+    #         pd.DataFrame({
+    #             "Mutation Types": mutation_types[invalid_theta],
+    #             "theta_k": theta_k[invalid_theta]
+    #         }).to_string(index=False)
+    #     )
 
-        raise ValueError(
-            "All theta_k parameters must be greater than 0."
-        )
+    #     raise ValueError(
+    #         "All theta_k parameters must be greater than 0."
+    #     )
 
     # ------------------------------------------------------------
     # Create output

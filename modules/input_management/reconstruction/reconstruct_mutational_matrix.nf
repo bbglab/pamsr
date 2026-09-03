@@ -10,7 +10,7 @@ process RECONSTRUCT_MUTATIONAL_MATRIX {
     container "docker.io/gomdomingoa/gsd:v0.1.0"
 
     // Publish the results
-    publishDir "${params.outdir}/reconstruction", mode: 'copy'
+    publishDir "${params.outdir}/${params.project_name}/reconstruction", mode: 'copy'
 
     // Take the input:
     // - signatures (.tsv/.csv): path to the signatures matrix (MutationType x Signature) plus its delimiter ("csv"/"tsv")
@@ -21,7 +21,7 @@ process RECONSTRUCT_MUTATIONAL_MATRIX {
 
     // Specify the output of the process and emit it
     output:
-    path "reconstructed_mutational_matrix.csv", emit: reconstructed_matrix
+    path "reconstructed_mutational_matrix.tsv", emit: reconstructed_matrix
 
     script:
 
@@ -72,6 +72,23 @@ process RECONSTRUCT_MUTATIONAL_MATRIX {
 
     E.columns = E.columns.str.strip()
 
+    # ============================================================
+    # Eliminate target signature
+    # ============================================================
+
+    target_signature = "${params.target_signature_eliminate_reconstruction}"
+
+    if target_signature:
+        print(f"Eliminating target signature: {target_signature}")
+
+        if target_signature in P.columns:
+            P = P.drop(columns=[target_signature])
+            print(f"  Removed {target_signature} from P")
+
+        if target_signature in E.columns:
+            E = E.drop(columns=[target_signature])
+            print(f"  Removed {target_signature} from E")
+            
     # ============================================================
     # Check duplicate signature names
     # ============================================================
@@ -166,8 +183,8 @@ process RECONSTRUCT_MUTATIONAL_MATRIX {
     # ============================================================
 
     M_df.to_csv(
-        "reconstructed_mutational_matrix.csv",
-        sep=","
+        "reconstructed_mutational_matrix.tsv",
+        sep="\\t"
     )
 
     print("Reconstructed matrix:")

@@ -6,6 +6,8 @@ process GENERATE_SYNTHETIC_COUNTS {
     // Load the container
     container "docker.io/gomdomingoa/gsd:v0.1.0"
 
+    publishDir "${params.outdir}/${params.project_name}/synthetic_data", mode: 'copy'
+
     // Take the input:
     // - channel_parameters (.tsv): path to the per-channel Gamma-Poisson parameters (alpha_k, theta_k)
     //   produced by COMPUTE_PARAMS_PER_CHANNEL, used to simulate synthetic mutation counts

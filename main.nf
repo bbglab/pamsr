@@ -75,8 +75,8 @@ workflow {
         Unknown pipeline analysis_mode: '${params.analysis_mode}'
 
         Valid modes are:
-          --analysis_mode spa
-          --analysis_mode pa
+          --analysis_mode signature_profiler_assignment
+          --analysis_mode power_analysis
         """
     }
 }

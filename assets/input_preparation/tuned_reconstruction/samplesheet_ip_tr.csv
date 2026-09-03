@@ -1,0 +1,3 @@
+input_path,delimiter,type
+/data/bbg/projects/signm4l/pamsr/input/input_preparation/tuned_reconstruction/data/signatures_activities.txt,tsv,activities
+/data/bbg/projects/signm4l/pamsr/input/input_preparation/tuned_reconstruction/data/solution_signatures.txt,tsv,signatures_catalog
