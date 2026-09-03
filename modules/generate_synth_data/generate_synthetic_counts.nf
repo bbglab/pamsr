@@ -61,17 +61,18 @@ process GENERATE_SYNTHETIC_COUNTS {
     # Each column = one mutational channel
     # ------------------------------------------------------------
 
-    lambdas_k = gamma.rvs(
-        a=alpha_k,
-        scale=theta_k,
-        size=(N, num_channels),
-        random_state=rng
-    )
+    # lambdas_k = gamma.rvs(
+    #     a=alpha_k,
+    #     scale=theta_k,
+    #     size=(N, num_channels),
+    #     random_state=rng
+    # )
 
     # ------------------------------------------------------------
     # Sample mutation counts
     # ------------------------------------------------------------
-
+    lambdas_k=params_df["N_mean_k"].to_numpy(dtype=float)
+    lambdas_k = np.tile(lambdas_k, (N, 1))
     counts_k = poisson.rvs(
         mu=lambdas_k,
         random_state=rng
