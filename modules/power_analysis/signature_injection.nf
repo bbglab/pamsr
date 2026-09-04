@@ -91,20 +91,20 @@ process INJECT_SIGNATURES {
             "Synthetic matrix contains no sample columns."
         )
 
+    # Keep an unaltered base copy to prevent mutation accumulation across steps
+    df_base = df_output.copy()
+
     for step, n_mutations in enumerate(mutation_steps, start=1):
 
         n_mutations = int(n_mutations)
+        
+        # Start each step clean from the base matrix
+        df_step = df_base.copy()
 
-        for i in range(n_mutations):
-
-            selected_sample = rng.choice(sample_columns)
-
-            counts = rng.multinomial(
-                n=1,
-                pvals=p
-            )
-
-            df_output.loc[:, selected_sample] += counts
+        # Inject n_mutations into every sample column in a single vectorized call per sample
+        for sample in sample_columns:
+            counts = rng.multinomial(n=n_mutations, pvals=p)
+            df_step.loc[:, sample] += counts
 
         output_file = (
             f"injected_duplicate_{duplicate_id}"
@@ -112,7 +112,7 @@ process INJECT_SIGNATURES {
             f"_n_{n_mutations}.tsv"
         )
 
-        df_output.to_csv(
+        df_step.to_csv(
             output_file,
             sep="\\t",
             index=False
@@ -121,7 +121,7 @@ process INJECT_SIGNATURES {
         print(
             f"Duplicate {duplicate_id} | "
             f"Step {step}/{len(mutation_steps)} | "
-            f"Added {n_mutations} mutations | "
+            f"Added {n_mutations} mutations per sample | "
             f"Signature {target_signature} | "
             f"Saved {output_file}"
         )

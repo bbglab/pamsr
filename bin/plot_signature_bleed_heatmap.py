@@ -85,6 +85,8 @@ def plot_signature_bleed_heatmap(
         if col in df_without.columns
         and col not in meta_cols
         and col != target_signature
+        and col != "duplicate_id"
+        and col != "iteration"
     ]
 
     if not common_non_target_sigs:

@@ -32,6 +32,7 @@ process SIGNATURE_PRESENCE_TEST {
         ${matrix} \
         ${catalog} \
         ${params.target_signature_pa} \
+        "${params.background_signatures.join(',')}" \
         ${params.cpus} \
         ${output_name}
     """

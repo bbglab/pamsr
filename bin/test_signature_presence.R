@@ -7,8 +7,13 @@ args <- commandArgs(trailingOnly = TRUE)
 spectra_file <- args[1]
 catalog_file <- args[2]
 target_sig   <- args[3]
-cpus         <- as.integer(args[4])
-output_name  <- args[5]
+
+raw_bg_sigs <- args[4]
+clean_bg_sigs <- gsub("[\\[\\]\"\\' ]", "", raw_bg_sigs)
+background_sigs <- unlist(strsplit(clean_bg_sigs, ","))
+
+cpus         <- as.integer(args[5])
+output_name  <- args[6]
 
 df_spectra <- read.table(
     spectra_file,
@@ -47,16 +52,36 @@ if (nrow(spectra_mat) != nrow(sigs_mat)) {
     stop(paste("Mismatch: spectra has", nrow(spectra_mat), "rows, but sigs has", nrow(sigs_mat), "rows."))
 }
 
+# Keep only samples/signatures specified in background_sigs
+missing_sigs <- setdiff(background_sigs, colnames(sigs_mat))
+
+if (length(missing_sigs) > 0) {
+    stop(
+        paste(
+            "The following background signatures are not present in sigs_mat:",
+            paste(missing_sigs, collapse = ", ")
+        )
+    )
+}
+
+# FIX MATRIX SUBSETTING
+bg_sigs_mat <- sigs_mat[, background_sigs, drop = FALSE]
+# print("Columns in sigs_mat:")
+# print(colnames(sigs_mat))
+# print("Columns in bg_sigs_mat:")
+# print(colnames(bg_sigs_mat))
+
+# print(bg_sigs_mat)
+# print(spectra_mat)
+
 sig.presence.test.out <- SignaturePresenceTest(
     spectra = spectra_mat,
-    sigs = sigs_mat,
+    sigs = bg_sigs_mat, 
     target.sig.index = target_sig,
     mc.cores = cpus
 )
 
 save(
     sig.presence.test.out,
-    file = file.path(
-        output_name
-    )
+    file = output_name
 )
