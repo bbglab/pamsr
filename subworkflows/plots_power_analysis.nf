@@ -4,7 +4,7 @@ nextflow.enable.dsl = 2
     IMPORTS: NEXTFLOW MODULES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { PLOT_EXPOSURE_NNLS } from '../modules/power_analysis/power_analysis_plots/exposure_and_nnls.nf'
+include { PLOT_EXPOSURE } from '../modules/power_analysis/power_analysis_plots/exposure.nf'
 include { PLOT_COMPARE_EXPOSURES } from '../modules/power_analysis/power_analysis_plots/exposure_comparison.nf'
 include { PLOT_LIMIT_OF_DETECTION } from '../modules/power_analysis/power_analysis_plots/limit_of_detection.nf'
 include { PLOT_LOGLH } from '../modules/power_analysis/power_analysis_plots/loglh_comparison.nf'
@@ -32,11 +32,10 @@ workflow PLOT_PA {
     // across the different sample sizes (y-axis) and indicating the
     // NNLS reconstruction error
     // ===========================================================
-    PLOT_EXPOSURE_NNLS(
+    PLOT_EXPOSURE(
         params.reference_signatures_gsd,
         exposures_with,
         params.target_signature_injection,
-        params.background_signatures
     )
     // ===========================================================
     // Plot the detected exposure of the target signature (x-axis)

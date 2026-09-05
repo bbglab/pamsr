@@ -8,16 +8,14 @@ import seaborn as sns
 from scipy.optimize import nnls
 
 
-def plot_exposure_and_nnls(
+def plot_exposure(
     cosmic_file: str,
     exposures_file: str,
     target_sig: str,
-    bg_sigs: list,
     output_plot: str,
 ) -> None:
     """
-    Computes Non-Negative Least Squares (NNLS) decomposition for a target SBS signature 
-    against specified background signatures and plots exposure trends across injected mutations.
+    Plots exposure trends across injected mutations.
 
     Parameters
     ----------
@@ -27,8 +25,6 @@ def plot_exposure_and_nnls(
         Path to the CSV file containing target signature exposures and mutation counts.
     target_sig : str
         Target SBS signature identifier (e.g., "SBS31").
-    bg_sigs : list of str
-        List of background signature identifiers (e.g., ["SBS1", "SBS5", "SBS40"]).
     output_plot : str
         File path where the output PNG plot will be saved.
 
@@ -74,12 +70,6 @@ def plot_exposure_and_nnls(
     df_exp = pd.read_csv(exposures_file)
 
     # Validate signature columns
-    missing_bg = [sig for sig in bg_sigs if sig not in df_cosmic.columns]
-    if missing_bg:
-        raise KeyError(
-            f"Background signature(s) {missing_bg} not found in COSMIC file."
-        )
-
     if target_sig not in df_cosmic.columns:
         raise KeyError(
             f"Target signature '{target_sig}' not found in COSMIC file."
@@ -89,26 +79,7 @@ def plot_exposure_and_nnls(
         raise KeyError(
             f"Target column '{target_sig}' not found in exposures file."
         )
-
-    # NNLS Calculation
-    b_matrix = (
-        df_cosmic[bg_sigs]
-        .apply(pd.to_numeric, errors="coerce")
-        .fillna(0)
-        .to_numpy()
-    )
-    t_vector = (
-        df_cosmic[target_sig]
-        .apply(pd.to_numeric, errors="coerce")
-        .fillna(0)
-        .to_numpy()
-    )
-
-    weights, residual = nnls(A=b_matrix, b=t_vector)
-
-    print(f"NNLS Weights: {weights}")
-    print(f"NNLS Residual: {residual}")
-
+    
     # Plot Setup
     plt.figure(figsize=(10, 6))
     sns.set_theme(style="whitegrid")
@@ -137,10 +108,6 @@ def plot_exposure_and_nnls(
         linewidth=1.5,
         label="y = x",
     )
-
-    # Include NNLS residual strictly in the legend without plotting a line
-    ax.plot([], [], " ", label=f"NNLS Residual: {residual:.4f}")
-    ax.legend(title="Legend", loc="best")
 
     plt.title(
         f"Exposure of {target_sig} by Number of Injected Mutations",
@@ -183,13 +150,6 @@ if __name__ == "__main__":
         help="Target signature name (e.g., SBS31).",
     )
     parser.add_argument(
-        "--bg_sigs",
-        type=str,
-        nargs="+",
-        required=True,
-        help="List of background signatures (e.g., SBS1 SBS2 SBS6).",
-    )
-    parser.add_argument(
         "--output_plot",
         type=str,
         required=True,
@@ -198,10 +158,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    plot_exposure_and_nnls(
+    plot_exposure(
         cosmic_file=args.cosmic_file,
         exposures_file=args.exposures_file,
         target_sig=args.target_sig,
-        bg_sigs=args.bg_sigs,
         output_plot=args.output_plot,
     )

@@ -27,25 +27,29 @@ workflow GSD {
         matrix
     )
 
-    ch_channel_parameters=COMPUTE_PARAMS_PER_CHANNEL.out.channel_params
+    // .first() turns this into a broadcastable "value channel" so the
+    // same channel_parameters file can be reused for every duplicate below
+    ch_channel_parameters = COMPUTE_PARAMS_PER_CHANNEL.out.channel_params
     // =============================================
-    // Generate the synthetic counts
+    // Build one (duplicate_id, seed) pair per duplicate,
+    // BEFORE simulating the background, so each duplicate
+    // gets its own independent Poisson draw.
+    // =============================================
+    ch_duplicate_seeds = channel
+        .fromList( (1..params.n_duplicates.toInteger()).collect { d ->
+            tuple(d, params.background_seed.toInteger() + d)
+        } )
+
+    // =============================================
+    // Generate the synthetic counts (once per duplicate,
+    // each with an independent random background)
     // =============================================
     GENERATE_SYNTHETIC_COUNTS(
+        ch_duplicate_seeds,
         ch_channel_parameters
     )
 
-    ch_synthetic = GENERATE_SYNTHETIC_COUNTS.out.synthetic_matrix
-
-    ch_injection_input = ch_synthetic
-        .flatMap { synthetic_matrix ->
-            (1..params.n_duplicates.toInteger()).collect { duplicate_id ->
-                tuple(
-                    duplicate_id,
-                    synthetic_matrix
-                )
-            }
-        }
+    ch_injection_input = GENERATE_SYNTHETIC_COUNTS.out.synthetic_matrix
             
     ch_reference_signatures = channel.value(
         file(params.reference_signatures_gsd)

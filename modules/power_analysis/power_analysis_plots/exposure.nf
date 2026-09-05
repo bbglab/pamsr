@@ -1,4 +1,4 @@
-process PLOT_EXPOSURE_NNLS {
+process PLOT_EXPOSURE {
     // Load the container
     container "docker.io/gomdomingoa/gsd:v0.1.0"
     
@@ -14,7 +14,6 @@ process PLOT_EXPOSURE_NNLS {
     path cosmic_tsv
     path exposures_csv
     val  target_signature
-    val  bg_signatures // e.g. ["SBS1", "SBS5", "SBS40"]
 
     // Specify the output of the process
     output:
@@ -22,11 +21,10 @@ process PLOT_EXPOSURE_NNLS {
 
     script:
     """
-    plot_exposure_and_nnls.py \\
+    plot_exposure.py \\
         --cosmic_file ${cosmic_tsv} \\
         --exposures_file ${exposures_csv} \\
         --target_sig ${target_signature} \\
-        --bg_sigs ${bg_signatures.join(' ')} \\
         --output_plot "exposure_${target_signature}.png"
     """
 }

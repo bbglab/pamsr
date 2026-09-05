@@ -1,7 +1,7 @@
 process GENERATE_SYNTHETIC_COUNTS {
 
     // Specify the process tag
-    tag "synthetic_counts_N${params.synthetic_N}"
+    tag "synthetic_counts_duplicate_${duplicate_id}"
 
     // Load the container
     container "docker.io/gomdomingoa/gsd:v0.1.0"
@@ -9,14 +9,18 @@ process GENERATE_SYNTHETIC_COUNTS {
     publishDir "${params.outdir}/${params.project_name}/synthetic_data", mode: 'copy'
 
     // Take the input:
+    // - duplicate_id (int): identifier of the replicate; used to derive a distinct seed
+    // - seed (int): seed for this replicate's background draw (make it reproducible but unique)
     // - channel_parameters (.tsv): path to the per-channel Gamma-Poisson parameters (alpha_k, theta_k)
     //   produced by COMPUTE_PARAMS_PER_CHANNEL, used to simulate synthetic mutation counts
     input:
+    tuple val(duplicate_id), val(seed)
     path channel_parameters
 
     // Specify the output of the process and emit it
     output:
-    path "synthetic_mutation_matrix.tsv", emit: synthetic_matrix
+    tuple val(duplicate_id), path("synthetic_mutation_matrix_duplicate_${duplicate_id}.tsv"),
+        emit: synthetic_matrix
 
     script:
     """
@@ -24,16 +28,18 @@ process GENERATE_SYNTHETIC_COUNTS {
 
     import numpy as np
     import pandas as pd
-    from scipy.stats import gamma, poisson
+    from scipy.stats import poisson
 
     # ------------------------------------------------------------
     # Parameters
     # ------------------------------------------------------------
 
     N = ${params.synthetic_N}
+    duplicate_id = ${duplicate_id}
+    seed = ${seed}
 
-    # Reproducible random number generator
-    rng = np.random.default_rng(42)
+    # Independent RNG stream per duplicate -> independent background draw
+    rng = np.random.default_rng(seed)
 
     # ------------------------------------------------------------
     # Read channel-specific parameters
@@ -46,32 +52,16 @@ process GENERATE_SYNTHETIC_COUNTS {
 
     mutation_types = params_df["Mutation Types"]
 
-    alpha_k = params_df["alpha_k"].to_numpy(dtype=float)
-    theta_k = params_df["theta_k"].to_numpy(dtype=float)
-
-    num_channels = len(alpha_k)
-
-    # ------------------------------------------------------------
-    # Sample latent lambda values
-    #
-    # Shape:
-    #   (N, K)
-    #
-    # Each row = one synthetic sample
-    # Each column = one mutational channel
-    # ------------------------------------------------------------
-
-    # lambdas_k = gamma.rvs(
-    #     a=alpha_k,
-    #     scale=theta_k,
-    #     size=(N, num_channels),
-    #     random_state=rng
-    # )
+    lambdas_k = params_df["N_mean_k"].to_numpy(dtype=float)
+    num_channels = len(lambdas_k)
 
     # ------------------------------------------------------------
     # Sample mutation counts
+    #
+    # Every duplicate gets its own Poisson draw (this call), so
+    # background noise is no longer shared/fixed across duplicates.
     # ------------------------------------------------------------
-    lambdas_k=params_df["N_mean_k"].to_numpy(dtype=float)
+
     lambdas_k = np.tile(lambdas_k, (N, 1))
     counts_k = poisson.rvs(
         mu=lambdas_k,
@@ -80,12 +70,6 @@ process GENERATE_SYNTHETIC_COUNTS {
 
     # ------------------------------------------------------------
     # Convert to mutational matrix format
-    #
-    # Current shape:
-    #   N x K
-    #
-    # Required shape:
-    #   K x N
     # ------------------------------------------------------------
 
     counts_df = pd.DataFrame(
@@ -106,13 +90,15 @@ process GENERATE_SYNTHETIC_COUNTS {
     # Save
     # ------------------------------------------------------------
 
+    output_file = f"synthetic_mutation_matrix_duplicate_{duplicate_id}.tsv"
+
     counts_df.to_csv(
-        "synthetic_mutation_matrix.tsv",
+        output_file,
         sep="\\t",
         index=False
     )
 
-    print("Generated synthetic mutation matrix")
+    print(f"Duplicate {duplicate_id} | seed {seed} | Generated synthetic mutation matrix")
     print("Number of channels:", num_channels)
     print("Number of samples:", N)
     print("Shape:", counts_df.shape)
